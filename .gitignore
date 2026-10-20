@@ -1,0 +1,11 @@
+# dependencies and build output
+node_modules/
+dist/
+tools/.venv/
+
+# local editor / assistant settings
+.claude/settings.local.json
+
+# OS clutter
+.DS_Store
+Thumbs.db

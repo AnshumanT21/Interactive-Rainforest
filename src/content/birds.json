@@ -1,0 +1,86 @@
+[
+  {
+    "id": "macaw",
+    "name": "Scarlet Macaw",
+    "latin": "Ara macao",
+    "text": "The loudest colour in the canopy. Pairs fly wing to wing above the treetops at dawn, calling to each other across the mist, and they stay together for life.",
+    "facts": [["Origin", "Central & South America"], ["Size", "81–96 cm"], ["Lifespan", "40–50 years"]]
+  },
+  {
+    "id": "toucan",
+    "name": "Toco Toucan",
+    "latin": "Ramphastos toco",
+    "text": "That famous beak is mostly air: a light honeycomb of keratin used to pluck fruit from thin branches and to shed heat on hot afternoons.",
+    "facts": [["Origin", "South America"], ["Size", "55–65 cm"], ["Lifespan", "Up to 20 years"]]
+  },
+  {
+    "id": "amazon",
+    "name": "Yellow-crowned Amazon",
+    "latin": "Amazona ochrocephala",
+    "text": "Green enough to vanish into the leaves until it speaks. Amazons are brilliant mimics with big personalities, and they love to sing along.",
+    "facts": [["Origin", "Central & South America"], ["Size", "35–38 cm"], ["Lifespan", "50–60 years"]]
+  },
+  {
+    "id": "sunconure",
+    "name": "Sun Conures",
+    "latin": "Aratinga solstitialis",
+    "text": "Little flames of orange and gold. Sun conures travel in noisy, affectionate flocks and are never far from a friend.",
+    "facts": [["Origin", "Northeastern South America"], ["Size", "30 cm"], ["Lifespan", "25–30 years"]]
+  },
+  {
+    "id": "ringneck",
+    "name": "Indian Ringneck",
+    "latin": "Psittacula krameri",
+    "text": "Elegant and endlessly curious, with a tail longer than its body. Males wear the dark ring around the neck, and many learn dozens of words.",
+    "facts": [["Origin", "India & Africa"], ["Size", "40 cm"], ["Lifespan", "25–30 years"]]
+  },
+  {
+    "id": "greencheek",
+    "name": "Green-cheeked Conures",
+    "latin": "Pyrrhura molinae",
+    "text": "Small birds with enormous charm. Green-cheeks love to play, hang upside down and burrow into anything soft. Quiet for a conure, cheeky for everyone else.",
+    "facts": [["Origin", "Central South America"], ["Size", "26 cm"], ["Lifespan", "Up to 30 years"]]
+  },
+  {
+    "id": "quaker",
+    "name": "Quaker Parrots",
+    "latin": "Myiopsitta monachus",
+    "text": "The only parrots that build stick nests: huge shared apartment blocks with a room for every family. Chatty, clever and always busy.",
+    "facts": [["Origin", "Argentina & Uruguay"], ["Size", "29 cm"], ["Lifespan", "20–30 years"]]
+  },
+  {
+    "id": "budgie",
+    "name": "Budgerigars",
+    "latin": "Melopsittacus undulatus",
+    "text": "Uma’s favourite! Wild budgies sweep across the sky in flocks of thousands, turning together like one bird. Small, bright, chattering and full of joy.",
+    "facts": [["Origin", "Australia"], ["Size", "18 cm"], ["Lifespan", "5–10 years"]]
+  },
+  {
+    "id": "lovebird",
+    "name": "Lovebirds",
+    "latin": "Agapornis roseicollis",
+    "text": "Named for the way pairs sit pressed side by side, preening each other for hours. Tiny parrots with big, devoted hearts.",
+    "facts": [["Origin", "Southwest Africa"], ["Size", "15–18 cm"], ["Lifespan", "15–20 years"]]
+  },
+  {
+    "id": "cockatiel",
+    "name": "Cockatiel",
+    "latin": "Nymphicus hollandicus",
+    "text": "Watch the crest: up when excited, flat when calm, half-raised when curious. Cockatiels whistle tunes, love head scratches and are gentle to the core.",
+    "facts": [["Origin", "Australia"], ["Size", "30–33 cm"], ["Lifespan", "15–25 years"]]
+  },
+  {
+    "id": "owl",
+    "name": "American Barn Owl",
+    "latin": "Tyto furcata",
+    "text": "As the light goes, the forest’s ghost wakes up. Its heart-shaped face funnels sound so well it can catch prey in total darkness, and its flight makes no sound at all.",
+    "facts": [["Origin", "The Americas"], ["Size", "33–39 cm"], ["Lifespan", "Up to 15 years"]]
+  },
+  {
+    "id": "waterfall",
+    "name": "The Waterfall",
+    "latin": "Where the journey ends",
+    "text": "Every stream in the canopy finds its way here. Thank you for flying through the rainforest. This one was made for Uma.",
+    "facts": [["Birds met", "11"], ["Made for", "Uma"], ["With", "love"]]
+  }
+]
