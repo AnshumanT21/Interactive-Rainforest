@@ -72,12 +72,12 @@ export function createPost(renderer, scene, camera, { mobile }) {
   composer.setSize(size.x, size.y);
 
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(size.x, size.y), mobile ? 0.3 : 0.45, 0.4, 0.92);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(size.x, size.y), mobile ? 0.18 : 0.25, 0.4, 1.0);   // only true highlights glow, never bright mist
   composer.addPass(bloom);
   composer.addPass(new ShaderPass(VignetteShader));
   composer.addPass(new OutputPass());
   const grain = new ShaderPass(GrainShader);
-  grain.uniforms.uAmount.value = mobile ? 0.04 : 0.055;
+  grain.uniforms.uAmount.value = mobile ? 0.025 : 0.03;
   composer.addPass(grain);
 
   return {

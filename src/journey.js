@@ -137,10 +137,14 @@ function makeVideo(src, mat) {
   el.setAttribute('muted', '');
   el.setAttribute('playsinline', '');
   const texture = new THREE.VideoTexture(el);
-  texture.colorSpace = THREE.SRGBColorSpace;
+  // three can't hand video frames to the GPU as sRGB the way it does images,
+  // and a custom shader gets the raw values, so the plate shader decodes
+  // them itself (uDecode); untouched, the video renders washed out and grey.
+  texture.colorSpace = THREE.NoColorSpace;
   texture.userData.ready = true;
   const v = { el, texture, src, loaded: false, playing: false };
-  el.addEventListener('playing', () => { mat.uniforms.uMap.value = texture; }, { once: true });
+  // swap from the still to the video only once a real frame is on the GPU
+  v.swap = () => { mat.uniforms.uMap.value = texture; mat.uniforms.uDecode.value = 1; };
   return v;
 }
 
@@ -370,6 +374,13 @@ export function createJourney(scene, { mobile }) {
         v.el.play().catch(() => { v.playing = false; v.retryAt = time + 2; });
       }
       else if (!play && v.playing) { v.playing = false; v.el.pause(); }
+      // Push each new frame to the GPU ourselves: three waits for the browser's
+      // video-frame callback, which some browsers skip (background tabs, some
+      // power-saving modes), leaving the texture black.
+      if (v.playing && v.el.readyState >= 2) {
+        v.texture.needsUpdate = true;
+        if (!v.swapped) { v.swapped = true; v.swap(); }
+      }
     }
     for (const m of mists) {
       const po = m.plate.visible ? m.plate.material.uniforms.uOpacity.value * occlusion[m.plate.userData.scene] : 0;

@@ -82,8 +82,8 @@ def main():
         frames = [f for f in iio.imiter(src)]
         looped = loop_frames(frames, fps)
         big = resize(looped, 1920)
-        _write_ffmpeg(dst, big, fps, crf=24)
-        _write_ffmpeg(OUT / f"{name}-sm.mp4", resize(looped, 1280), fps, crf=27)
+        _write_ffmpeg(dst, big, fps, crf=19)
+        _write_ffmpeg(OUT / f"{name}-sm.mp4", resize(looped, 1280), fps, crf=24)
         Image.fromarray(big[0]).save(OUT / f"{name}.webp", "WEBP", quality=82)
         print(name, f"{len(frames)} -> {len(looped)} frames", f"{dst.stat().st_size / 1e6:.1f} MB")
 

@@ -32,6 +32,7 @@ export function plateMaterial(map, { water = null } = {}) {
       uTint: { value: new THREE.Color(1, 1, 1) },
       uTime: { value: 0 },
       uWater: { value: water ? new THREE.Vector4(...water) : new THREE.Vector4(0, 0, 0, 0) },
+      uDecode: { value: 0 },   // 1 for video: decode its sRGB colours here (see makeVideo)
     },
     vertexShader: vertex,
     fragmentShader: /* glsl */ `
@@ -40,10 +41,15 @@ export function plateMaterial(map, { water = null } = {}) {
       uniform float uOpacity, uTime;
       uniform vec3 uTint;
       uniform vec4 uWater;   // x0, y0, x1, y1 of the falling water in uv
+      uniform float uDecode;
       varying vec2 vUv;
       ${noise}
+      vec3 srgbToLinear(vec3 c) {
+        return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c));
+      }
       void main() {
         vec3 c = texture2D(uMap, vUv).rgb;
+        if (uDecode > 0.5) c = srgbToLinear(c);
         if (uWater.z > 0.0) {
           vec2 lo = uWater.xy, hi = uWater.zw;
           float inRect = smoothstep(lo.x - 0.02, lo.x + 0.01, vUv.x) * smoothstep(hi.x + 0.02, hi.x - 0.01, vUv.x)

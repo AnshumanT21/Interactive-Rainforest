@@ -13,7 +13,10 @@ import { setTextureScale } from './fx/textures.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const mobile = matchMedia('(max-width: 768px), (pointer: coarse)').matches;
+// phones and small tablets; a touchscreen laptop is not a phone, so a touch
+// screen alone doesn't count (it would get the smaller, softer files)
+const mobile = matchMedia('(max-width: 768px)').matches
+  || (matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 900);
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const debug = new URLSearchParams(location.search).has('debug');
 setTextureScale(mobile ? 0.6 : 1);
@@ -29,8 +32,9 @@ const pixelRatioFor = (w, h) => Math.max(1, Math.min(window.devicePixelRatio, 2,
 renderer.setPixelRatio(pixelRatioFor(window.innerWidth, window.innerHeight));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
+// The scenes are real photographs and video, already graded by the camera:
+// show them as they are. (Film tone mapping flattens and whitens them.)
+renderer.toneMapping = THREE.NoToneMapping;
 
 setRenderer(renderer);
 const scene = new THREE.Scene();
