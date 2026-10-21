@@ -19,7 +19,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "prompts" / "Videos"
 OUT = ROOT / "public" / "assets" / "video"
-BLEND_S = 1.0
+BLEND_S = 0.75
 
 
 def name_of(p: Path) -> str:
@@ -30,7 +30,25 @@ def name_of(p: Path) -> str:
     return n
 
 
+def best_loop(frames, fps):
+    """Pick where the loop starts and ends: the pair of frames (one near the
+    start, one near the end, at least 6 s apart) that look most alike, so the
+    cross-fade between them doesn't show a ghosted double bird."""
+    n = len(frames)
+    small = [np.asarray(Image.fromarray(f).resize((96, 54), Image.BILINEAR), dtype=np.float32) for f in frames]
+    reach = int(2 * fps)
+    best = (np.inf, 0, n - 1)
+    for a in range(0, min(reach, n)):
+        for b in range(max(a + int(6 * fps), n - reach), n):
+            d = float(np.abs(small[a] - small[b]).mean())
+            if d < best[0]:
+                best = (d, a, b)
+    return best
+
+
 def loop_frames(frames, fps):
+    d, a, b = best_loop(frames, fps)
+    frames = frames[a:b + 1]
     k = int(round(BLEND_S * fps))
     n = len(frames)
     out = []
@@ -42,6 +60,7 @@ def loop_frames(frames, fps):
             out.append(np.clip(f + 0.5, 0, 255).astype(np.uint8))
         else:
             out.append(frames[j])
+    print(f"  loop {a}..{b} (match {d:.1f})")
     return out
 
 
