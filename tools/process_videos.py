@@ -54,7 +54,14 @@ def stabilise(frames):
     ys = np.convolve([s[0] for s in shifts], np.ones(9) / 9, mode="same")
     xs = np.convolve([s[1] for s in shifts], np.ones(9) / 9, mode="same")
     m = int(np.ceil(max(np.abs(ys).max(), np.abs(xs).max())))
-    if m <= 3:
+    # A real camera creep changes smoothly from frame to frame. If the
+    # readings jump about instead, they're being fooled by moving content
+    # (drifting mist, water), so leave the clip alone rather than shake it.
+    jitter = float(np.mean(np.abs(np.array([s[0] for s in shifts]) - ys))
+                   + np.mean(np.abs(np.array([s[1] for s in shifts]) - xs)))
+    if m <= 3 or jitter > 1.5:
+        if m > 3:
+            print(f"  not stabilised (drift readings unreliable, jitter {jitter:.1f})")
         return frames
     h, w = frames[0].shape[:2]
     pad = m + 2
@@ -63,7 +70,7 @@ def stabilise(frames):
         f = np.roll(f, (int(round(dy)), int(round(dx))), axis=(0, 1))
         crop = f[pad:h - pad, int(pad * w / h):w - int(pad * w / h)]
         out.append(np.asarray(Image.fromarray(crop).resize((w, h), Image.LANCZOS)))
-    print(f"  stabilised (drift up to {m}px)")
+    print(f"  stabilised (drift up to {m}px, jitter {jitter:.1f})")
     return out
 
 

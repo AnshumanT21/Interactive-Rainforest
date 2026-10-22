@@ -126,7 +126,7 @@ export function createSound(stops) {
     // waterfall rises over the last stretch of the journey
     const last = stops.length - 1;
     const wf = Math.max(0, Math.min(1, 1 - (last - k) / 1.4));
-    waterGain.gain.setTargetAtTime(wf * wf * 0.35, t, 0.3);
+    waterGain.gain.setTargetAtTime(wf * wf * (stops[last]?.video ? 0.12 : 0.35), t, 0.3);
     waterGain.spray.gain.setTargetAtTime(wf * wf * 0.05, t, 0.3);
     rainGain.gain.setTargetAtTime(rain * 0.16, t, 0.5);
     windGain.gain.setTargetAtTime(0.05 * (1 - rain * 0.6), t, 0.5);

@@ -63,8 +63,8 @@ const hintEl = document.querySelector('.hint');
 const cardsEl = document.getElementById('cards');
 // what you can do at each stop, said once on its card
 const hintFor = (stop) => (stop.fireflies ? 'Tap the owl to hear it · move to shine your torch'
-  : stop.video ? 'Tap the bird to hear its call'
-    : stop.pool ? 'Tap the pool to make ripples' : '');
+  : stop.pool ? 'Tap the pool to make ripples'
+    : stop.video ? 'Tap the bird to hear its call' : '');
 const cards = STOPS.map((stop, i) => {
   const el = document.createElement('article');
   el.className = `card card--${stop.side > 0 ? 'left' : 'right'}`;

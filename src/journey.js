@@ -47,8 +47,8 @@ const STOP_DEFS = {
   lovebird:   { plate: 'p09-lovebird-golden',    bird: 'b09-lovebirds',      side: 1,  perch: [0.6, 0.365],   feet: [0.5, 0.2],   hf: 0.27, light: 'golden', video: 'v09-lovebirds', videoX: 0.62, birdBox: [0.45, 0.15, 0.78, 0.8] },
   cockatiel:  { plate: 'p10-cockatiel-golden',   bird: 'b10-cockatiel',      side: 1,  perch: [0.6, 0.39],   feet: [0.6, 0.36],  hf: 0.32, light: 'late', video: 'v10-cockatiel', videoX: 0.7, birdBox: [0.55, 0.0, 0.85, 0.95] },
   owl:        { plate: 'p11-owl-dusk-hollow',    bird: 'b11-barn-owl',       side: 1,  perch: [0.615, 0.44],  feet: [0.5, 0.08],  hf: 0.31, light: 'dusk', video: 'v11-owl', videoX: 0.62, birdBox: [0.5, 0.1, 0.75, 0.75], fireflies: true },
-  waterfall:  { plate: 'p12-waterfall', bird: null, side: -1, light: 'dusk', flyers: 'finale', weight: 1.4,
-                water: [0.23, 0.18, 0.37, 0.74], pool: [0.24, 0.02, 0.68, 0.33], plateShift: 0.07, portraitShift: 0.2 },
+  waterfall:  { plate: 'p12-waterfall', bird: null, side: -1, light: 'dusk', weight: 1.4,
+                video: 'v12-waterfall', videoX: 0.29, pool: [0.22, 0.0, 0.64, 0.21] },
 };
 
 export const STOPS = BIRDS.map((b) => ({ ...b, ...STOP_DEFS[b.id] }));
@@ -62,7 +62,7 @@ const FADE_NEAR = 13;    // a plate dissolves as the camera closes from 13 to ~3
 
 const SCENES = [
   { cam: [0, 34, 0], dir: [0, -0.18, -1], plate: '01-sky-above-clouds', d: 58 },
-  { cam: [0, 6, -80], dir: [0, -0.06, -1], plate: '02-canopy-reveal', d: 45 },
+  { cam: [0, 6, -80], dir: [0, -0.06, -1], plate: '02-canopy-reveal', d: 45, video: 'v00-canopy' },
   ...STOPS.map((s, k) => ({
     cam: [Math.sin(k * 1.7) * 3.5, 4 - k * 0.8, -128 - k * SPACING],
     dir: [Math.sin(k * 2.3) * 0.08, -0.02, -1],
@@ -194,26 +194,28 @@ export function createJourney(scene, { mobile }) {
     const stop = sc.stop;
     // a stop with a video starts on the clip's first frame, then swaps to the
     // playing video once it has loaded
-    const still = stop?.video ? `${A}video/${stop.video}.webp` : `${A}plates/${sc.plate}${size}.webp`;
+    const videoName = stop?.video ?? sc.video;
+    const still = videoName ? `${A}video/${videoName}.webp` : `${A}plates/${sc.plate}${size}.webp`;
     const mat = plateMaterial(loadTexture(still), {
-      water: stop?.video ? null : stop?.water, pool: stop?.pool, aspect: stop?.video ? 16 / 9 : PLATE_ASPECT,
+      water: videoName ? null : stop?.water, pool: stop?.pool, aspect: videoName ? 16 / 9 : PLATE_ASPECT,
     });
-    mat.uniforms.uTint.value.set(...(stop?.light === 'dusk' ? [0.92, 0.95, 1.0] : [1, 1, 1]));
+    // dusk photos get a cool cast; videos are already graded, so they don't
+    mat.uniforms.uTint.value.set(...(stop?.light === 'dusk' && !videoName ? [0.92, 0.95, 1.0] : [1, 1, 1]));
     const plate = addLayer(new THREE.Mesh(PLANE, mat), at(sc.d), si === 0 ? 22 : FADE_NEAR);
     plate.userData.isPlate = true;
     plate.renderOrder = -10 - si * 0.01;   // furthest first, so nearer plates cover it
     const entry = { mesh: plate, index: si, d: sc.d, base: plate.position.clone(), right, stop, aspect: PLATE_ASPECT };
     plates.push(entry);
-    if (stop?.video) {
+    if (videoName) {
       entry.aspect = 16 / 9;
-      entry.video = makeVideo(`${A}video/${stop.video}${mobile ? '-sm' : ''}.mp4`, mat);
+      entry.video = makeVideo(`${A}video/${videoName}${mobile ? '-sm' : ''}.mp4`, mat);
     }
 
     if (!stop) return;
     const k = si - 2;
 
     // mist rising off the plunge pool, drifting up and away
-    if (stop.water) {
+    if (stop.water && !stop.video) {
       const [x0, y0, x1] = stop.water;
       for (let i = 0; i < (mobile ? 5 : 9); i++) {
         const puff = new THREE.Mesh(PLANE, new THREE.MeshBasicMaterial({
