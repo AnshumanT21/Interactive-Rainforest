@@ -41,9 +41,9 @@ const STOP_DEFS = {
   greencheek: { plate: 'p06-greencheek-leaves',  bird: 'b06-green-cheeks',   side: -1, perch: [0.45, 0.375],    feet: [0.5, 0.37],  hf: 0.32, light: 'day', video: 'v06-greencheekedconures', videoX: 0.36 },
   quaker:     { plate: 'p07-quaker-nest-tree',   bird: 'b07-quakers',        side: 1,  perch: [0.675, 0.625], feet: [0.48, 0.37], hf: 0.25, light: 'day', video: 'v07-quakers', videoX: 0.65 },
   budgie:     { plate: 'p08-budgie-bush',        bird: 'b08-budgies-perched', side: -1, perch: [0.4, 0.6], feet: [0.5, 0.42], hf: 0.24, light: 'day', weight: 1.6, video: 'v08-budgies', videoX: 0.3 },
-  lovebird:   { plate: 'p09-lovebird-golden',    bird: 'b09-lovebirds',      side: 1,  perch: [0.6, 0.365],   feet: [0.5, 0.2],   hf: 0.27, light: 'golden' },
-  cockatiel:  { plate: 'p10-cockatiel-golden',   bird: 'b10-cockatiel',      side: 1,  perch: [0.6, 0.39],   feet: [0.6, 0.36],  hf: 0.32, light: 'late', flyers: 'budgie-cameo' },
-  owl:        { plate: 'p11-owl-dusk-hollow',    bird: 'b11-barn-owl',       side: 1,  perch: [0.615, 0.44],  feet: [0.5, 0.08],  hf: 0.31, light: 'dusk' },
+  lovebird:   { plate: 'p09-lovebird-golden',    bird: 'b09-lovebirds',      side: 1,  perch: [0.6, 0.365],   feet: [0.5, 0.2],   hf: 0.27, light: 'golden', video: 'v09-lovebirds', videoX: 0.62 },
+  cockatiel:  { plate: 'p10-cockatiel-golden',   bird: 'b10-cockatiel',      side: 1,  perch: [0.6, 0.39],   feet: [0.6, 0.36],  hf: 0.32, light: 'late', video: 'v10-cockatiel', videoX: 0.7 },
+  owl:        { plate: 'p11-owl-dusk-hollow',    bird: 'b11-barn-owl',       side: 1,  perch: [0.615, 0.44],  feet: [0.5, 0.08],  hf: 0.31, light: 'dusk', video: 'v11-owl', videoX: 0.62 },
   waterfall:  { plate: 'p12-waterfall', bird: null, side: -1, light: 'dusk', flyers: 'finale', weight: 1.4,
                 water: [0.23, 0.18, 0.37, 0.74], plateShift: 0.07, portraitShift: 0.2 },
 };

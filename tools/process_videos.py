@@ -30,6 +30,43 @@ def name_of(p: Path) -> str:
     return n
 
 
+def _shift(a, b):
+    """Translation (dy, dx) that best lines b up with a (phase correlation)."""
+    F = np.fft.fft2(a - a.mean())
+    G = np.fft.fft2(b - b.mean())
+    R = F * np.conj(G)
+    r = np.fft.ifft2(R / (np.abs(R) + 1e-6)).real
+    y, x = np.unravel_index(r.argmax(), r.shape)
+    h, w = a.shape
+    return (y if y < h / 2 else y - h, x if x < w / 2 else x - w)
+
+
+def stabilise(frames):
+    """Undo slow camera drift (Veo sometimes creeps a few pixels): shift every
+    frame back onto the first, then trim the edges that slid in and scale back
+    up. Clips that don't drift are returned untouched."""
+    scale = 4
+    g = lambda f: np.asarray(Image.fromarray(f).convert("L").resize(
+        (f.shape[1] // scale, f.shape[0] // scale), Image.BILINEAR), dtype=np.float32)
+    ref = g(frames[0])
+    shifts = [(0, 0)] + [tuple(v * scale for v in _shift(ref, g(f))) for f in frames[1:]]
+    # smooth so per-frame jitter in the estimate doesn't shake the picture
+    ys = np.convolve([s[0] for s in shifts], np.ones(9) / 9, mode="same")
+    xs = np.convolve([s[1] for s in shifts], np.ones(9) / 9, mode="same")
+    m = int(np.ceil(max(np.abs(ys).max(), np.abs(xs).max())))
+    if m <= 3:
+        return frames
+    h, w = frames[0].shape[:2]
+    pad = m + 2
+    out = []
+    for f, dy, dx in zip(frames, ys, xs):
+        f = np.roll(f, (int(round(dy)), int(round(dx))), axis=(0, 1))
+        crop = f[pad:h - pad, int(pad * w / h):w - int(pad * w / h)]
+        out.append(np.asarray(Image.fromarray(crop).resize((w, h), Image.LANCZOS)))
+    print(f"  stabilised (drift up to {m}px)")
+    return out
+
+
 def best_loop(frames, fps):
     """Pick where the loop starts and ends: the pair of frames (one near the
     start, one near the end, at least 6 s apart) that look most alike, so the
@@ -98,7 +135,7 @@ def main():
         if dst.exists() and dst.stat().st_mtime >= src.stat().st_mtime:
             continue
         fps = iio.immeta(src).get("fps", 24)
-        frames = [f for f in iio.imiter(src)]
+        frames = stabilise([f for f in iio.imiter(src)])
         looped = loop_frames(frames, fps)
         big = resize(looped, 1920)
         _write_ffmpeg(dst, big, fps, crf=19)
