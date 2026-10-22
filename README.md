@@ -20,6 +20,16 @@ Then open http://localhost:5173. Add `?debug` to the URL for a frame-rate counte
 - `src/fx/` holds the effects: clouds, flying birds, butterflies, shaders and post-processing.
 - `public/assets/` holds the web-ready images and videos the site loads.
 
+## Interactions
+
+- **Sound** (button, top left, off by default): each stop plays the soundtrack from its Veo clip, looped, under a soft wind bed; the waterfall roar rises near the end.
+- **Tap a bird** to hear its call (the loudest moment of its clip's soundtrack). Hit areas are `birdBox` in `src/journey.js`.
+- **Make it rain** (button): rain streaks over the scene with rain sound.
+- **Owl torch**: at the dusk owl stop the forest goes dark and the cursor (or finger) becomes a torch; fireflies drift toward it.
+- **Waterfall ripples**: tap the pool to send out ripples (`pool` in `src/journey.js`).
+
+After adding videos, run `tools/.venv/Scripts/python tools/process_audio.py` to extract their soundtracks.
+
 ## Adding new images and videos
 
 The raw Gemini files live in `prompts/` (prompt sheets plus the `Batch 1–4` and `Videos` folders). Two scripts turn them into web assets:

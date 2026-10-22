@@ -24,7 +24,9 @@ const noise = /* glsl */ `
   }
 `;
 
-export function plateMaterial(map, { water = null } = {}) {
+export const MAX_RIPPLES = 6;
+
+export function plateMaterial(map, { water = null, pool = null, aspect = 16 / 9 } = {}) {
   return new THREE.ShaderMaterial({
     uniforms: {
       uMap: { value: map },
@@ -33,6 +35,10 @@ export function plateMaterial(map, { water = null } = {}) {
       uTime: { value: 0 },
       uWater: { value: water ? new THREE.Vector4(...water) : new THREE.Vector4(0, 0, 0, 0) },
       uDecode: { value: 0 },   // 1 for video: decode its sRGB colours here (see makeVideo)
+      // ripples on the pool: (u, v, start time, strength); strength 0 = unused
+      uRipples: { value: Array.from({ length: MAX_RIPPLES }, () => new THREE.Vector4(0, 0, -100, 0)) },
+      uPool: { value: pool ? new THREE.Vector4(...pool) : new THREE.Vector4(0, 0, 0, 0) },
+      uAspect: { value: aspect },
     },
     vertexShader: vertex,
     fragmentShader: /* glsl */ `
@@ -42,14 +48,39 @@ export function plateMaterial(map, { water = null } = {}) {
       uniform vec3 uTint;
       uniform vec4 uWater;   // x0, y0, x1, y1 of the falling water in uv
       uniform float uDecode;
+      uniform vec4 uRipples[${MAX_RIPPLES}];
+      uniform vec4 uPool;
+      uniform float uAspect;
       varying vec2 vUv;
       ${noise}
       vec3 srgbToLinear(vec3 c) {
         return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c));
       }
       void main() {
-        vec3 c = texture2D(uMap, vUv).rgb;
+        vec2 uv = vUv;
+        float glint = 0.0;
+        if (uPool.z > 0.0) {
+          // Expanding rings from each tap: bend the photo along the wave front
+          // (refraction) and catch a little light on the crests.
+          float inPool = smoothstep(uPool.x, uPool.x + 0.04, vUv.x) * smoothstep(uPool.z, uPool.z - 0.04, vUv.x)
+                       * smoothstep(uPool.y, uPool.y + 0.02, vUv.y) * smoothstep(uPool.w, uPool.w - 0.04, vUv.y);
+          for (int i = 0; i < ${MAX_RIPPLES}; i++) {
+            vec4 r = uRipples[i];
+            float age = uTime - r.z;
+            if (r.w <= 0.0 || age < 0.0 || age > 4.0) continue;
+            // rings look flattened on water seen at a low angle
+            vec2 d = (vUv - r.xy) * vec2(uAspect, uAspect * 2.6);
+            float dist = length(d);
+            float front = age * 0.16;
+            float env = exp(-age * 1.1) * smoothstep(front + 0.05, front, dist) * smoothstep(0.0, 0.02, dist);
+            float wave = sin((dist - front) * 140.0) * env * r.w;
+            uv += normalize(d + 1e-5) / vec2(uAspect, uAspect * 2.6) * wave * 0.004 * inPool;
+            glint += max(wave, 0.0) * inPool;
+          }
+        }
+        vec3 c = texture2D(uMap, uv).rgb;
         if (uDecode > 0.5) c = srgbToLinear(c);
+        c += glint * 0.12;
         if (uWater.z > 0.0) {
           vec2 lo = uWater.xy, hi = uWater.zw;
           float inRect = smoothstep(lo.x - 0.02, lo.x + 0.01, vUv.x) * smoothstep(hi.x + 0.02, hi.x - 0.01, vUv.x)

@@ -8,7 +8,7 @@
 // feels like pushing through the forest from one clearing to the next.
 import * as THREE from 'three';
 import * as tex from './fx/textures.js';
-import { plateMaterial, birdMaterial } from './fx/materials.js';
+import { plateMaterial, birdMaterial, MAX_RIPPLES } from './fx/materials.js';
 import { loadTexture } from './assets.js';
 import BIRDS from './content/birds.json';
 
@@ -32,20 +32,23 @@ const LIGHT = {
 // video: a looping Veo clip of the bird already in its scene. When present it
 //        replaces the photo and the cut-out bird; videoX is where the bird is
 //        across the clip (0..1), used to frame it.
+// birdBox: where the bird is in its scene (uv, 0,0 = bottom left); tapping
+//        inside it plays the bird's call.
+// pool:  the waterfall's plunge pool (uv); tapping it sends out ripples.
 const STOP_DEFS = {
-  macaw:      { plate: 'p01-macaw-canopy',      bird: 'b01-macaw-perched',  side: -1, perch: [0.31, 0.49], feet: [0.38, 0.46], hf: 0.36, light: 'dawn', video: 'v01-macaw', videoX: 0.21 },
-  toucan:     { plate: 'p02-toucan-high-branch', bird: 'b02-toucan',         side: -1, perch: [0.4, 0.388],  feet: [0.47, 0.31], hf: 0.33, light: 'dawn', video: 'v02-toucan', videoX: 0.45 },
-  amazon:     { plate: 'p03-amazon-mossy-limb',  bird: 'b03-amazon',         side: -1, perch: [0.42, 0.27],   feet: [0.55, 0.3],  hf: 0.34, light: 'dawn', video: 'v03-amazon', videoX: 0.45 },
-  sunconure:  { plate: 'p04-sunconure-clearing', bird: 'b04-sun-conures',    side: -1, perch: [0.4, 0.335],  feet: [0.5, 0.37],  hf: 0.3,  light: 'day', video: 'v04-sunconures', videoX: 0.25 },
-  ringneck:   { plate: 'p05-ringneck-vines',     bird: 'b05-ringneck',       side: -1, perch: [0.38, 0.37],    feet: [0.37, 0.53], hf: 0.33, light: 'day', video: 'v05-ringneck', videoX: 0.28 },
-  greencheek: { plate: 'p06-greencheek-leaves',  bird: 'b06-green-cheeks',   side: -1, perch: [0.45, 0.375],    feet: [0.5, 0.37],  hf: 0.32, light: 'day', video: 'v06-greencheekedconures', videoX: 0.36 },
-  quaker:     { plate: 'p07-quaker-nest-tree',   bird: 'b07-quakers',        side: 1,  perch: [0.675, 0.625], feet: [0.48, 0.37], hf: 0.25, light: 'day', video: 'v07-quakers', videoX: 0.65 },
-  budgie:     { plate: 'p08-budgie-bush',        bird: 'b08-budgies-perched', side: -1, perch: [0.4, 0.6], feet: [0.5, 0.42], hf: 0.24, light: 'day', weight: 1.6, video: 'v08-budgies', videoX: 0.3 },
-  lovebird:   { plate: 'p09-lovebird-golden',    bird: 'b09-lovebirds',      side: 1,  perch: [0.6, 0.365],   feet: [0.5, 0.2],   hf: 0.27, light: 'golden', video: 'v09-lovebirds', videoX: 0.62 },
-  cockatiel:  { plate: 'p10-cockatiel-golden',   bird: 'b10-cockatiel',      side: 1,  perch: [0.6, 0.39],   feet: [0.6, 0.36],  hf: 0.32, light: 'late', video: 'v10-cockatiel', videoX: 0.7 },
-  owl:        { plate: 'p11-owl-dusk-hollow',    bird: 'b11-barn-owl',       side: 1,  perch: [0.615, 0.44],  feet: [0.5, 0.08],  hf: 0.31, light: 'dusk', video: 'v11-owl', videoX: 0.62 },
+  macaw:      { plate: 'p01-macaw-canopy',      bird: 'b01-macaw-perched',  side: -1, perch: [0.31, 0.49], feet: [0.38, 0.46], hf: 0.36, light: 'dawn', video: 'v01-macaw', videoX: 0.21, birdBox: [0.12, 0.15, 0.32, 0.85] },
+  toucan:     { plate: 'p02-toucan-high-branch', bird: 'b02-toucan',         side: -1, perch: [0.4, 0.388],  feet: [0.47, 0.31], hf: 0.33, light: 'dawn', video: 'v02-toucan', videoX: 0.45, birdBox: [0.33, 0.25, 0.6, 0.85] },
+  amazon:     { plate: 'p03-amazon-mossy-limb',  bird: 'b03-amazon',         side: -1, perch: [0.42, 0.27],   feet: [0.55, 0.3],  hf: 0.34, light: 'dawn', video: 'v03-amazon', videoX: 0.45, birdBox: [0.3, 0.05, 0.65, 0.95] },
+  sunconure:  { plate: 'p04-sunconure-clearing', bird: 'b04-sun-conures',    side: -1, perch: [0.4, 0.335],  feet: [0.5, 0.37],  hf: 0.3,  light: 'day', video: 'v04-sunconures', videoX: 0.25, birdBox: [0.1, 0.2, 0.4, 0.85] },
+  ringneck:   { plate: 'p05-ringneck-vines',     bird: 'b05-ringneck',       side: -1, perch: [0.38, 0.37],    feet: [0.37, 0.53], hf: 0.33, light: 'day', video: 'v05-ringneck', videoX: 0.28, birdBox: [0.15, 0.0, 0.4, 0.9] },
+  greencheek: { plate: 'p06-greencheek-leaves',  bird: 'b06-green-cheeks',   side: -1, perch: [0.45, 0.375],    feet: [0.5, 0.37],  hf: 0.32, light: 'day', video: 'v06-greencheekedconures', videoX: 0.36, birdBox: [0.2, 0.1, 0.55, 0.75] },
+  quaker:     { plate: 'p07-quaker-nest-tree',   bird: 'b07-quakers',        side: 1,  perch: [0.675, 0.625], feet: [0.48, 0.37], hf: 0.25, light: 'day', video: 'v07-quakers', videoX: 0.65, birdBox: [0.5, 0.35, 0.8, 0.8] },
+  budgie:     { plate: 'p08-budgie-bush',        bird: 'b08-budgies-perched', side: -1, perch: [0.4, 0.6], feet: [0.5, 0.42], hf: 0.24, light: 'day', weight: 1.6, video: 'v08-budgies', videoX: 0.3, birdBox: [0.08, 0.15, 0.5, 0.85] },
+  lovebird:   { plate: 'p09-lovebird-golden',    bird: 'b09-lovebirds',      side: 1,  perch: [0.6, 0.365],   feet: [0.5, 0.2],   hf: 0.27, light: 'golden', video: 'v09-lovebirds', videoX: 0.62, birdBox: [0.45, 0.15, 0.78, 0.8] },
+  cockatiel:  { plate: 'p10-cockatiel-golden',   bird: 'b10-cockatiel',      side: 1,  perch: [0.6, 0.39],   feet: [0.6, 0.36],  hf: 0.32, light: 'late', video: 'v10-cockatiel', videoX: 0.7, birdBox: [0.55, 0.0, 0.85, 0.95] },
+  owl:        { plate: 'p11-owl-dusk-hollow',    bird: 'b11-barn-owl',       side: 1,  perch: [0.615, 0.44],  feet: [0.5, 0.08],  hf: 0.31, light: 'dusk', video: 'v11-owl', videoX: 0.62, birdBox: [0.5, 0.1, 0.75, 0.75], fireflies: true },
   waterfall:  { plate: 'p12-waterfall', bird: null, side: -1, light: 'dusk', flyers: 'finale', weight: 1.4,
-                water: [0.23, 0.18, 0.37, 0.74], plateShift: 0.07, portraitShift: 0.2 },
+                water: [0.23, 0.18, 0.37, 0.74], pool: [0.24, 0.02, 0.68, 0.33], plateShift: 0.07, portraitShift: 0.2 },
 };
 
 export const STOPS = BIRDS.map((b) => ({ ...b, ...STOP_DEFS[b.id] }));
@@ -164,6 +167,8 @@ export function createJourney(scene, { mobile }) {
   const size = mobile ? '-sm' : '';
   const shadowTex = tex.radialGlow();
   const mists = [];
+  const fireflyGroups = [];
+  const torch = { uv: null, amount: 0 };
   SCENES.forEach((sc, si) => {
     const C = cams[si];
     const f = new THREE.Vector3(...sc.dir).normalize();
@@ -190,7 +195,9 @@ export function createJourney(scene, { mobile }) {
     // a stop with a video starts on the clip's first frame, then swaps to the
     // playing video once it has loaded
     const still = stop?.video ? `${A}video/${stop.video}.webp` : `${A}plates/${sc.plate}${size}.webp`;
-    const mat = plateMaterial(loadTexture(still), { water: stop?.video ? null : stop?.water });
+    const mat = plateMaterial(loadTexture(still), {
+      water: stop?.video ? null : stop?.water, pool: stop?.pool, aspect: stop?.video ? 16 / 9 : PLATE_ASPECT,
+    });
     mat.uniforms.uTint.value.set(...(stop?.light === 'dusk' ? [0.92, 0.95, 1.0] : [1, 1, 1]));
     const plate = addLayer(new THREE.Mesh(PLANE, mat), at(sc.d), si === 0 ? 22 : FADE_NEAR);
     plate.userData.isPlate = true;
@@ -219,6 +226,27 @@ export function createJourney(scene, { mobile }) {
       }
     }
     frames.push({ at, C, f, right, up, stop, index: si });
+
+    // fireflies drifting in the dusk; at the owl they're drawn to the torch
+    if (stop.fireflies) {
+      const n = mobile ? 26 : 48;
+      const pos = new Float32Array(n * 3);
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const pts = new THREE.Points(geo, new THREE.PointsMaterial({
+        map: shadowTex, color: new THREE.Color(1.6, 1.5, 0.55), size: mobile ? 0.5 : 0.42, sizeAttenuation: true,
+        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, opacity: 0,
+      }));
+      pts.renderOrder = plate.renderOrder + 0.007;
+      pts.frustumCulled = false;
+      plate.add(pts);
+      const flies = Array.from({ length: n }, (_, i) => {
+        const r = (k2) => (Math.sin(i * 91.7 + k2 * 13.1) * 0.5 + 0.5);
+        return { home: [0.05 + r(1) * 0.9, 0.1 + r(2) * 0.75], p: [0, 0], phase: r(3) * 6.28, speed: 0.4 + r(4) * 0.5 };
+      });
+      flies.forEach((fl) => { fl.p[0] = fl.home[0]; fl.p[1] = fl.home[1]; });
+      fireflyGroups.push({ pts, pos, flies, plate });
+    }
 
     // the bird, pinned to its perch on the photo (a child of the plate, so the
     // two move as one and the feet never slide off the branch)
@@ -252,8 +280,11 @@ export function createJourney(scene, { mobile }) {
     leaves.renderOrder = 2;
     leaves.userData.baseOpacity = 0.55;
 
-    anchors.push({ pos: at(8, -stop.side * 1.4, 0.8), spread: 3, scene: si });
-    anchors.push({ pos: at(14, stop.side * 3.5, 1.5), spread: 4.5, scene: si });
+    // butterflies by day; at dusk the fireflies take over
+    if (!stop.fireflies) {
+      anchors.push({ pos: at(8, -stop.side * 1.4, 0.8), spread: 3, scene: si });
+      anchors.push({ pos: at(14, stop.side * 3.5, 1.5), spread: 4.5, scene: si });
+    }
   });
   // one anchor in the open air beneath the clouds, near the title
   anchors.push({ pos: cams[1].clone().add(new THREE.Vector3(0, -2, -12)), spread: 6, scene: 1 });
@@ -382,6 +413,33 @@ export function createJourney(scene, { mobile }) {
         if (!v.swapped) { v.swapped = true; v.swap(); }
       }
     }
+    for (const g of fireflyGroups) {
+      const po = g.plate.visible ? g.plate.material.uniforms.uOpacity.value * occlusion[g.plate.userData.scene] : 0;
+      g.pts.visible = po > 0.01;
+      if (!g.pts.visible) continue;
+      g.pts.material.opacity = po * (0.55 + 0.45 * Math.sin(time * 2.3));
+      const s = g.plate.scale;
+      for (let i = 0; i < g.flies.length; i++) {
+        const fl = g.flies[i];
+        // wander around home; with the torch on, drift toward the beam
+        let tx = fl.home[0] + Math.sin(time * fl.speed + fl.phase) * 0.05;
+        let ty = fl.home[1] + Math.cos(time * fl.speed * 0.8 + fl.phase * 1.3) * 0.04;
+        if (torch.uv && torch.amount > 0.05) {
+          const pull = torch.amount * 0.75;
+          tx += (torch.uv.x + Math.sin(time * 1.7 + fl.phase) * 0.06 - tx) * pull;
+          ty += (torch.uv.y + Math.cos(time * 1.3 + fl.phase) * 0.06 - ty) * pull;
+        }
+        const k = 1 - Math.exp(-dt * (0.6 + torch.amount));
+        fl.p[0] += (tx - fl.p[0]) * k;
+        fl.p[1] += (ty - fl.p[1]) * k;
+        // points don't inherit the plate's stretch nicely, so place them in
+        // plate-local units and let the parent scale do the rest
+        g.pos[i * 3] = fl.p[0] - 0.5;
+        g.pos[i * 3 + 1] = fl.p[1] - 0.5;
+        g.pos[i * 3 + 2] = 0.01 / s.z;
+      }
+      g.pts.geometry.attributes.position.needsUpdate = true;
+    }
     for (const m of mists) {
       const po = m.plate.visible ? m.plate.material.uniforms.uOpacity.value * occlusion[m.plate.userData.scene] : 0;
       const a = ((time + m.t0) % m.life) / m.life;          // 0 -> 1 over each puff's life
@@ -415,5 +473,39 @@ export function createJourney(scene, { mobile }) {
     }
   }
 
-  return { curve, lookCurve, anchors, frames, layout, update, birds, occlusion, videos: plates.filter((p) => p.video).map((p) => p.video) };
+  // What's under the pointer? The front plate that's (nearly) solid, and
+  // where on it, in the photo's uv.
+  const _ray = new THREE.Raycaster();
+  const _hit = new THREE.Vector3();
+  const _plane = new THREE.Plane();
+  function pick(ndc, camera) {
+    const p = plates.find((q) => q.mesh.visible && q.mesh.material.uniforms.uOpacity.value > 0.6);
+    if (!p) return null;
+    _ray.setFromCamera(ndc, camera);
+    p.mesh.updateWorldMatrix(true, false);
+    _plane.setFromNormalAndCoplanarPoint(p.mesh.userData.normal, p.mesh.getWorldPosition(_hit));
+    if (!_ray.ray.intersectPlane(_plane, _hit)) return null;
+    p.mesh.worldToLocal(_hit);
+    const uv = new THREE.Vector2(_hit.x + 0.5, _hit.y + 0.5);
+    const st = p.stop;
+    const inBox = (b) => b && uv.x > b[0] && uv.x < b[2] && uv.y > b[1] && uv.y < b[3];
+    let kind = null;
+    if (st?.video && inBox(st.birdBox)) kind = 'bird';
+    else if (inBox(st?.pool)) kind = 'pool';
+    return { kind, stop: st, uv, index: p.index };
+  }
+
+  let rippleSlot = 0;
+  function addRipple(index, uv, time, strength = 1) {
+    const r = plates[index].mesh.material.uniforms.uRipples.value[rippleSlot];
+    r.set(uv.x, uv.y, time, strength);
+    rippleSlot = (rippleSlot + 1) % MAX_RIPPLES;
+  }
+
+  function setTorch(uv, amount) { torch.uv = uv; torch.amount = amount; }
+
+  return {
+    curve, lookCurve, anchors, frames, layout, update, birds, occlusion, pick, addRipple, setTorch,
+    videos: plates.filter((p) => p.video).map((p) => p.video),
+  };
 }

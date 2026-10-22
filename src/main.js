@@ -9,6 +9,7 @@ import { createButterflies } from './fx/butterflies.js';
 import { createPost } from './fx/post.js';
 import { createFlyers } from './fx/flyers.js';
 import { onProgress, setRenderer } from './assets.js';
+import { createInteractions } from './interact.js';
 import { setTextureScale } from './fx/textures.js';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -46,6 +47,7 @@ const clouds = createClouds(scene, journey.curve, { lastIndex: LAST_INDEX, indic
 const flyers = createFlyers(scene, journey.frames, { mobile, occlusion: journey.occlusion });
 const butterflies = createButterflies(scene, journey.anchors, { perAnchor: mobile ? 2 : 4, occlusion: journey.occlusion });
 const post = createPost(renderer, scene, camera, { mobile });
+const interact = createInteractions({ journey, stops: STOPS, camera, mobile });
 
 // Upload every texture and compile every shader now, so nothing stalls the
 // first time a stop scrolls into view.
@@ -59,6 +61,10 @@ renderer.compile(scene, camera);
 const titleEl = document.querySelector('.title');
 const hintEl = document.querySelector('.hint');
 const cardsEl = document.getElementById('cards');
+// what you can do at each stop, said once on its card
+const hintFor = (stop) => (stop.fireflies ? 'Tap the owl to hear it · move to shine your torch'
+  : stop.video ? 'Tap the bird to hear its call'
+    : stop.pool ? 'Tap the pool to make ripples' : '');
 const cards = STOPS.map((stop, i) => {
   const el = document.createElement('article');
   el.className = `card card--${stop.side > 0 ? 'left' : 'right'}`;
@@ -67,7 +73,8 @@ const cards = STOPS.map((stop, i) => {
     <h2 class="card__name">${stop.name}</h2>
     <p class="card__latin">${stop.latin}</p>
     <p class="card__text">${stop.text}</p>
-    <dl class="card__facts">${stop.facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`;
+    <dl class="card__facts">${stop.facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
+    ${hintFor(stop) ? `<p class="card__hint">${hintFor(stop)}</p>` : ''}`;
   cardsEl.appendChild(el);
   return { el, stop, active: false };
 });
@@ -129,7 +136,7 @@ let lastHint = -1;
 
 const stats = { fps: 0, frames: 0, acc: 0, min: Infinity };
 window.__uma = stats;
-if (debug) Object.assign(stats, { lenis, scene, camera, holds: STOPS.map((s) => s.hold), videos: journey.videos });
+if (debug) Object.assign(stats, { lenis, scene, camera, holds: STOPS.map((s) => s.hold), videos: journey.videos, journey });
 const fpsEl = debug ? Object.assign(document.body.appendChild(document.createElement('div')), { className: 'fps' }) : null;
 
 function tick() {
@@ -156,6 +163,7 @@ function tick() {
   sky.update(camera.position, fogColor, skyMix);
 
   journey.update(camera, mouse, time, dt);
+  interact.update(progressToIndex(progress), time, dt);
   flyers.update(camera, time);
   clouds.update(camera.position, time);
   butterflies.update(camera, mouse, time, dt);
